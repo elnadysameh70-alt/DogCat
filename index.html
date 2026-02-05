@@ -1,87 +1,100 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>DOG&CAT | تسجيل الدخول</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>DOG & CAT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Telegram WebApp -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Tahoma, Arial;
-      background: #0f0f0f;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .card {
-      background: #1c1c1c;
-      padding: 25px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 360px;
-      text-align: center;
-      box-shadow: 0 0 25px rgba(255,165,0,0.3);
-    }
-
-    h1 {
-      color: orange;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 14px;
-      opacity: 0.85;
-    }
-
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: orange;
-      color: #000;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+<style>
+body{
+  font-family: Tahoma, Arial;
+}
+</style>
 </head>
 
-<body>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center">
 
-<div class="card">
-  <h1>DOG&CAT 🐶🐱</h1>
-  <p>جاري تسجيل الدخول عبر تيليجرام...</p>
-  <button onclick="login()">دخول</button>
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="w-full max-w-sm p-6 bg-slate-800 rounded-xl">
+  <h1 class="text-2xl font-bold text-center mb-4">DOG & CAT</h1>
+
+  <input id="phoneInput"
+    class="w-full p-3 mb-3 rounded text-black"
+    placeholder="رقم الهاتف">
+
+  <button onclick="login()"
+    class="w-full bg-green-600 py-3 rounded font-bold">
+    دخول / تسجيل
+  </button>
+</div>
+
+<!-- PROFILE PAGE -->
+<div id="profilePage" class="hidden w-full max-w-sm p-6 bg-slate-800 rounded-xl text-center">
+  <h2 class="text-xl font-bold mb-3">الصفحة الشخصية</h2>
+
+  <p id="userPhone" class="mb-4"></p>
+
+  <button onclick="logout()"
+    class="w-full bg-red-600 py-3 rounded font-bold">
+    خروج
+  </button>
 </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.ready();
+/* ================= STORAGE ================= */
 
-  function login() {
-    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-      alert("يجب فتح التطبيق من داخل تيليجرام");
-      return;
-    }
+function getUser(){
+  return localStorage.getItem("user");
+}
 
-    const user = tg.initDataUnsafe.user;
+function setUser(phone){
+  localStorage.setItem("user", phone);
+}
 
-    localStorage.setItem("user_id", user.id);
-    localStorage.setItem("username", user.username || "");
-    localStorage.setItem("first_name", user.first_name || "");
+function clearUser(){
+  localStorage.removeItem("user");
+}
 
-    window.location.href = "profile.html";
+/* ================= LOGIN ================= */
+
+function login(){
+  const phone = document.getElementById("phoneInput").value.trim();
+
+  if(!phone){
+    alert("ادخل رقم الهاتف");
+    return;
   }
+
+  setUser(phone);
+  showProfile();
+}
+
+/* ================= PROFILE ================= */
+
+function showProfile(){
+  const user = getUser();
+  if(!user) return;
+
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("profilePage").classList.remove("hidden");
+  document.getElementById("userPhone").innerText = "📞 " + user;
+}
+
+/* ================= LOGOUT ================= */
+
+function logout(){
+  clearUser();
+  location.reload();
+}
+
+/* ================= AUTO LOGIN ================= */
+
+if(getUser()){
+  showProfile();
+}
 </script>
 
 </body>
-</html>
+  </html>
