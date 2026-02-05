@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOG & CAT</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      font-family:'Cairo', sans-serif;
+      background:linear-gradient(135deg,#f6f7fb,#e9ecf3);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ========== SPLASH ========== -->
+<div id="splash" class="min-h-screen flex flex-col items-center justify-center gap-6 bg-black text-white">
+  <h1 class="text-5xl font-bold">DOG & CAT</h1>
+  <div class="text-4xl">🐾 🐾</div>
+  <button id="startBtn" class="px-12 py-4 bg-pink-600 rounded-full text-xl">
+    دخول
+  </button>
+</div>
+
+<!-- ========== AUTH ========== -->
+<div id="auth" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="bg-slate-800 p-6 rounded-xl w-full max-w-sm text-white">
+    <h2 class="text-xl mb-4 text-center">تسجيل / دخول</h2>
+
+    <input id="nameInput" placeholder="الاسم (للتسجيل)" class="w-full p-3 rounded text-black mb-2">
+    <input id="phoneInput" placeholder="رقم الهاتف" class="w-full p-3 rounded text-black mb-2">
+    <input id="passInput" type="password" placeholder="كلمة المرور" class="w-full p-3 rounded text-black mb-2">
+    <input id="pass2Input" type="password" placeholder="تأكيد كلمة المرور" class="w-full p-3 rounded text-black mb-4">
+
+    <button id="loginBtn" class="w-full bg-blue-600 py-3 rounded mb-2">دخول</button>
+    <button id="registerBtn" class="w-full bg-green-600 py-3 rounded">تسجيل جديد</button>
+  </div>
+</div>
+
+<!-- ========== POLICY ========== -->
+<div id="policy" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="bg-slate-800 p-6 rounded-xl max-w-md w-full text-white">
+    <h2 class="text-xl mb-3 text-center">السياسات</h2>
+
+    <div class="bg-slate-700 p-3 h-40 overflow-y-auto text-sm mb-4">
+      • لا يتم تفعيل أي اشتراك إلا بعد موافقة الأدمن<br>
+      • السحب بعد انتهاء الاشتراك<br>
+      • جميع العمليات مسجلة
+    </div>
+
+    <label class="flex items-center gap-2 mb-4">
+      <input type="checkbox" id="policyCheck">
+      <span>أوافق على الشروط</span>
+    </label>
+
+    <button id="policyBtn" class="w-full bg-green-600 py-3 rounded">تم</button>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="app" class="hidden min-h-screen p-4">
+  <div id="topBar" class="flex gap-2 mb-4"></div>
+  <div id="content"></div>
+</div>
+
+<script>
+/* ===== CONSTANTS ===== */
+const ADMIN_PHONE="000000";
+const ADMIN_PASS="000000";
+
+/* ===== STORAGE ===== */
+let users=JSON.parse(localStorage.getItem("users"))||[];
+let currentUser=JSON.parse(localStorage.getItem("currentUser"))||null;
+
+/* ===== ELEMENTS ===== */
+const splash=document.getElementById("splash");
+const auth=document.getElementById("auth");
+const policy=document.getElementById("policy");
+const app=document.getElementById("app");
+const content=document.getElementById("content");
+const topBar=document.getElementById("topBar");
+
+/* ===== SPLASH ===== */
+startBtn.onclick=()=>{
+  splash.classList.add("hidden");
+  auth.classList.remove("hidden");
+};
+
+/* ===== LOGIN ===== */
+loginBtn.onclick=()=>{
+  const phone=phoneInput.value.trim();
+  const pass=passInput.value;
+
+  if(phone===ADMIN_PHONE && pass===ADMIN_PASS){
+    currentUser={admin:true};
+    saveSession();
+    openApp();
+    return;
+  }
+
+  const u=users.find(x=>x.phone===phone && x.pass===pass);
+  if(!u) return alert("بيانات خاطئة");
+
+  currentUser=u;
+  saveSession();
+  auth.classList.add("hidden");
+  policy.classList.remove("hidden");
+};
+
+/* ===== REGISTER ===== */
+registerBtn.onclick=()=>{
+  if(passInput.value!==pass2Input.value) return alert("كلمة المرور غير متطابقة");
+
+  const u={
+    name:nameInput.value,
+    phone:phoneInput.value,
+    pass:passInput.value,
+    balance:0,
+    stars:0,
+    policy:false
+  };
+
+  users.push(u);
+  currentUser=u;
+  saveAll();
+
+  auth.classList.add("hidden");
+  policy.classList.remove("hidden");
+};
+
+/* ===== POLICY ===== */
+policyBtn.onclick=()=>{
+  if(!policyCheck.checked) return alert("يجب الموافقة");
+  currentUser.policy=true;
+  saveAll();
+  openApp();
+};
+
+/* ===== APP ===== */
+function openApp(){
+  splash.classList.add("hidden");
+  auth.classList.add("hidden");
+  policy.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  currentUser.admin?renderAdmin():renderUser();
+}
+
+/* ===== USER ===== */
+function renderUser(){
+  topBar.innerHTML=`
+    <button onclick="renderProfile()" class="bg-blue-600 px-3 py-2 rounded">الرئيسية</button>
+    <button onclick="logout()" class="bg-red-600 px-3 py-2 rounded">خروج</button>
+  `;
+  renderProfile();
+}
+
+function renderProfile(){
+  content.innerHTML=`
+    <div class="bg-white p-4 rounded shadow">
+      <p>👤 ${currentUser.name}</p>
+      <p>📞 ${currentUser.phone}</p>
+      <p>💰 الرصيد: ${currentUser.balance}</p>
+      <p>⭐ النجوم: ${currentUser.stars}</p>
+    </div>
+  `;
+}
+
+/* ===== ADMIN ===== */
+function renderAdmin(){
+  topBar.innerHTML=`
+    <div class="bg-black text-white px-4 py-2 rounded">لوحة الأدمن</div>
+    <button onclick="logout()" class="bg-red-600 px-3 py-2 rounded">خروج</button>
+  `;
+  content.innerHTML="<div class='text-center'>مرحبًا أيها الأدمن</div>";
+}
+
+/* ===== HELPERS ===== */
+function saveAll(){
+  localStorage.setItem("users",JSON.stringify(users));
+  saveSession();
+}
+function saveSession(){
+  localStorage.setItem("currentUser",JSON.stringify(currentUser));
+}
+function logout(){
+  localStorage.clear();
+  location.reload();
+}
+
+if(currentUser) openApp();
+</script>
+
+</body>
+    </html>
