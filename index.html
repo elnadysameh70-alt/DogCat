@@ -1,197 +1,87 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>Dog & Cat Subscriptions</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>DOG&CAT | تسجيل الدخول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body{
-  margin:0;
-  font-family:Tahoma, Arial;
-  background:#111;
-  color:#fff;
-  direction:rtl;
-}
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-header{
-  background:linear-gradient(135deg,#ff9800,#ff5722);
-  padding:20px;
-  text-align:center;
-  font-size:24px;
-  font-weight:bold;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-.container{
-  padding:15px;
-}
+    .card {
+      background: #1c1c1c;
+      padding: 25px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(255,165,0,0.3);
+    }
 
-.card{
-  background:#1e1e1e;
-  border-radius:16px;
-  margin-bottom:20px;
-  padding:15px;
-  box-shadow:0 0 15px rgba(0,0,0,.5);
-  opacity:.4;
-}
+    h1 {
+      color: orange;
+      margin-bottom: 10px;
+    }
 
-.card.active{
-  opacity:1;
-}
+    p {
+      font-size: 14px;
+      opacity: 0.85;
+    }
 
-.card img{
-  width:100%;
-  border-radius:12px;
-}
-
-.price{
-  font-size:22px;
-  color:#ff9800;
-  margin:10px 0;
-}
-
-.duration{
-  color:#bbb;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
-  background:#ff9800;
-  color:#000;
-  font-size:18px;
-  cursor:pointer;
-}
-
-button:disabled{
-  background:#555;
-  cursor:not-allowed;
-}
-
-.timer{
-  margin-top:10px;
-  color:#00e676;
-  font-weight:bold;
-  text-align:center;
-}
-
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.popup-content{
-  background:#222;
-  padding:20px;
-  border-radius:15px;
-  text-align:center;
-  width:85%;
-}
-
-.popup-content h3{
-  margin-top:0;
-  color:#ff9800;
-}
-
-.popup-content button{
-  margin-top:15px;
-}
-</style>
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: orange;
+      color: #000;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>🐶 Dog & Cat Subscriptions 🐱</header>
-
-<div class="container" id="cards"></div>
-
-<div class="popup" id="popup">
-  <div class="popup-content">
-    <h3>رقم التحويل</h3>
-    <p id="payNumber">01000000000</p>
-    <button onclick="confirmPay()">تم التحويل</button>
-    <button onclick="closePopup()">إلغاء</button>
-  </div>
+<div class="card">
+  <h1>DOG&CAT 🐶🐱</h1>
+  <p>جاري تسجيل الدخول عبر تيليجرام...</p>
+  <button onclick="login()">دخول</button>
 </div>
 
 <script>
-const adminNumber = "01000000000"; // ← غير رقم التحويل من هنا
+  const tg = window.Telegram.WebApp;
+  tg.ready();
 
-const plans = [
- {price:200, days:2, img:"https://placekitten.com/400/250"},
- {price:500, days:5, img:"https://placekitten.com/401/250"},
- {price:1000, days:7, img:"https://placekitten.com/402/250"},
- {price:5000, days:14, img:"https://placekitten.com/403/250"},
- {price:10000, days:30, img:"https://placekitten.com/404/250"}
-];
+  function login() {
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+      alert("يجب فتح التطبيق من داخل تيليجرام");
+      return;
+    }
 
-let currentPlan = parseInt(localStorage.getItem("currentPlan")||0);
-let endTimes = JSON.parse(localStorage.getItem("endTimes")||"[]");
-let selectedPlan = null;
+    const user = tg.initDataUnsafe.user;
 
-const cards = document.getElementById("cards");
+    localStorage.setItem("user_id", user.id);
+    localStorage.setItem("username", user.username || "");
+    localStorage.setItem("first_name", user.first_name || "");
 
-function render(){
-  cards.innerHTML="";
-  plans.forEach((p,i)=>{
-    const card=document.createElement("div");
-    card.className="card"+(i===currentPlan?" active":"");
-    card.innerHTML=`
-      <img src="${p.img}">
-      <div class="price">${p.price} جنيه</div>
-      <div class="duration">${p.days} يوم</div>
-      <button ${i!==currentPlan?"disabled":""} onclick="subscribe(${i})">
-        اشترك
-      </button>
-      <div class="timer" id="timer${i}"></div>
-    `;
-    cards.appendChild(card);
-  });
-}
-render();
-
-function subscribe(i){
-  selectedPlan=i;
-  document.getElementById("payNumber").innerText=adminNumber;
-  document.getElementById("popup").style.display="flex";
-}
-
-function closePopup(){
-  document.getElementById("popup").style.display="none";
-}
-
-function confirmPay(){
-  const now=Date.now();
-  const duration=plans[selectedPlan].days*24*60*60*1000;
-  endTimes[selectedPlan]=now+duration;
-  localStorage.setItem("endTimes",JSON.stringify(endTimes));
-  document.getElementById("popup").style.display="none";
-}
-
-function updateTimers(){
-  const now=Date.now();
-  if(endTimes[currentPlan] && now<endTimes[currentPlan]){
-    const diff=endTimes[currentPlan]-now;
-    const d=Math.floor(diff/86400000);
-    const h=Math.floor(diff%86400000/3600000);
-    const m=Math.floor(diff%3600000/60000);
-    document.getElementById("timer"+currentPlan).innerText=
-      `الوقت المتبقي: ${d}ي ${h}س ${m}د`;
-  }else if(endTimes[currentPlan]){
-    currentPlan++;
-    localStorage.setItem("currentPlan",currentPlan);
-    render();
+    window.location.href = "profile.html";
   }
-}
-setInterval(updateTimers,1000);
 </script>
 
 </body>
-</html>
+  </html>
