@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>DOG & CAT</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
@@ -16,25 +17,22 @@ body{
 
 <body class="bg-slate-900 text-white min-h-screen flex items-center justify-center">
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="w-full max-w-sm p-6 bg-slate-800 rounded-xl">
-  <h1 class="text-2xl font-bold text-center mb-4">DOG & CAT</h1>
-
-  <input id="phoneInput"
-    class="w-full p-3 mb-3 rounded text-black"
-    placeholder="رقم الهاتف">
-
-  <button onclick="login()"
-    class="w-full bg-green-600 py-3 rounded font-bold">
-    دخول / تسجيل
-  </button>
+<!-- NOT TELEGRAM -->
+<div id="notTelegram" class="hidden text-center p-6">
+  <h2 class="text-xl font-bold mb-3">⚠️ تنبيه</h2>
+  <p>التطبيق يعمل من داخل تيليجرام فقط</p>
 </div>
 
-<!-- PROFILE PAGE -->
-<div id="profilePage" class="hidden w-full max-w-sm p-6 bg-slate-800 rounded-xl text-center">
-  <h2 class="text-xl font-bold mb-3">الصفحة الشخصية</h2>
+<!-- PROFILE -->
+<div id="app" class="hidden w-full max-w-sm p-6 bg-slate-800 rounded-xl text-center">
+  <h1 class="text-2xl font-bold mb-3">DOG & CAT</h1>
 
-  <p id="userPhone" class="mb-4"></p>
+  <p id="userInfo" class="mb-4"></p>
+
+  <button onclick="goSubs()"
+    class="w-full bg-green-600 py-3 rounded font-bold mb-3">
+    الاشتراكات
+  </button>
 
   <button onclick="logout()"
     class="w-full bg-red-600 py-3 rounded font-bold">
@@ -43,56 +41,30 @@ body{
 </div>
 
 <script>
-/* ================= STORAGE ================= */
+const tg = window.Telegram.WebApp;
 
-function getUser(){
-  return localStorage.getItem("user");
+if(!tg.initDataUnsafe.user){
+  document.getElementById("notTelegram").classList.remove("hidden");
+}else{
+  tg.ready();
+  tg.expand();
+
+  const user = tg.initDataUnsafe.user;
+  localStorage.setItem("user_id", user.id);
+  localStorage.setItem("user_name", user.first_name || "");
+
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userInfo").innerText =
+    "👤 " + user.first_name + "\n🆔 " + user.id;
 }
 
-function setUser(phone){
-  localStorage.setItem("user", phone);
+function goSubs(){
+  alert("صفحة الاشتراكات (قريبًا)");
 }
-
-function clearUser(){
-  localStorage.removeItem("user");
-}
-
-/* ================= LOGIN ================= */
-
-function login(){
-  const phone = document.getElementById("phoneInput").value.trim();
-
-  if(!phone){
-    alert("ادخل رقم الهاتف");
-    return;
-  }
-
-  setUser(phone);
-  showProfile();
-}
-
-/* ================= PROFILE ================= */
-
-function showProfile(){
-  const user = getUser();
-  if(!user) return;
-
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("profilePage").classList.remove("hidden");
-  document.getElementById("userPhone").innerText = "📞 " + user;
-}
-
-/* ================= LOGOUT ================= */
 
 function logout(){
-  clearUser();
-  location.reload();
-}
-
-/* ================= AUTO LOGIN ================= */
-
-if(getUser()){
-  showProfile();
+  localStorage.clear();
+  tg.close();
 }
 </script>
 
