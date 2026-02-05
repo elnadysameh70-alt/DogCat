@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOG & CAT</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  direction:rtl;
+  background:#f2f2f2;
+}
+
+.page{
+  display:none;
+  min-height:100vh;
+  padding:20px;
+}
+
+button,input{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  font-size:16px;
+}
+
+.box{
+  max-width:360px;
+  margin:auto;
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+}
+
+/* start */
+#startPage{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  background:#111;
+  color:#fff;
+}
+#startBtn{width:200px}
+
+/* top bar */
+.top{
+  display:flex;
+  justify-content:space-between;
+  background:#222;
+  color:#fff;
+  padding:10px;
+  border-radius:8px;
+}
+
+/* timer */
+.timer{
+  background:#fff;
+  border:2px solid #000;
+  padding:10px;
+  text-align:center;
+  margin:10px 0;
+  font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- START -->
+<div id="startPage" class="page" style="display:flex">
+  <h1>DOG & CAT 🐾</h1>
+  <button id="startBtn">ابدأ</button>
+</div>
+
+<!-- REGISTER -->
+<div id="registerPage" class="page">
+  <div class="box">
+    <h3>تسجيل جديد</h3>
+    <input id="rName" placeholder="الاسم">
+    <input id="rPhone" placeholder="رقم الهاتف">
+    <input id="rPass" type="password" placeholder="كلمة المرور">
+    <input id="rPass2" type="password" placeholder="تأكيد كلمة المرور">
+    <button onclick="register()">تسجيل</button>
+    <button onclick="goLogin()">لدي حساب</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="page">
+  <div class="box">
+    <h3>دخول</h3>
+    <input id="lPhone" placeholder="رقم الهاتف">
+    <input id="lPass" type="password" placeholder="كلمة المرور">
+    <button onclick="login()">دخول</button>
+    <button onclick="goRegister()">تسجيل جديد</button>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="userPage" class="page">
+  <div class="top">
+    <div id="uName"></div>
+    <button onclick="logout()">خروج</button>
+  </div>
+
+  <div class="box">
+    <h4>الكارنيه</h4>
+    <p>📞 <span id="uPhone"></span></p>
+    <p>💰 الرصيد: <span id="uBalance"></span></p>
+  </div>
+
+  <div id="subTimer" class="timer" style="display:none"></div>
+
+  <div class="box">
+    <h4>الاشتراكات</h4>
+    <button onclick="subscribe(7)">اشتراك 7 أيام</button>
+    <button onclick="subscribe(30)">اشتراك 30 يوم</button>
+    <button onclick="openWithdraw()">سحب رصيد</button>
+  </div>
+</div>
+
+<!-- WITHDRAW -->
+<div id="withdrawPage" class="page">
+  <div class="box">
+    <h3>سحب رصيد</h3>
+    <p>رصيدك: <span id="wBalance"></span></p>
+    <input id="wAmount" type="number" placeholder="مبلغ السحب (500+)">
+    <button onclick="withdraw()">طلب سحب</button>
+    <div id="wTimer" class="timer" style="display:none"></div>
+    <button onclick="backUser()">رجوع</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPage" class="page">
+  <div class="box">
+    <h3>لوحة الأدمن</h3>
+    <input id="aPhone" placeholder="رقم المستخدم">
+    <input id="aAmount" type="number" placeholder="إضافة رصيد">
+    <button onclick="addBalance()">إضافة</button>
+    <button onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let current = null;
+let subInterval=null;
+let withdrawInterval=null;
+
+/* navigation */
+function hideAll(){
+  document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+}
+startBtn.onclick=()=>{hideAll();registerPage.style.display="block"}
+function goLogin(){hideAll();loginPage.style.display="block"}
+function goRegister(){hideAll();registerPage.style.display="block"}
+function logout(){current=null;hideAll();loginPage.style.display="block"}
+function backUser(){hideAll();userPage.style.display="block"}
+function openWithdraw(){
+  wBalance.textContent=current.balance;
+  hideAll();withdrawPage.style.display="block"
+}
+
+/* register */
+function register(){
+  if(rPass.value!==rPass2.value) return alert("كلمة المرور غير متطابقة");
+  if(users.find(u=>u.phone===rPhone.value)) return alert("موجود");
+  users.push({
+    name:rName.value,
+    phone:rPhone.value,
+    pass:rPass.value,
+    balance:0,
+    subEnd:null,
+    lastWithdraw:0
+  });
+  localStorage.setItem("users",JSON.stringify(users));
+  alert("تم التسجيل");
+  goLogin();
+}
+
+/* login */
+function login(){
+  if(lPhone.value==="000000" && lPass.value==="000000"){
+    hideAll();adminPage.style.display="block";return;
+  }
+  const u=users.find(x=>x.phone===lPhone.value && x.pass===lPass.value);
+  if(!u) return alert("خطأ");
+  current=u;
+  showUser();
+}
+
+/* user */
+function showUser(){
+  hideAll();
+  userPage.style.display="block";
+  uName.textContent=current.name;
+  uPhone.textContent=current.phone;
+  uBalance.textContent=current.balance;
+  if(current.subEnd && Date.now()<current.subEnd) startSubTimer();
+}
+
+/* subscribe */
+function subscribe(days){
+  if(current.subEnd && Date.now()<current.subEnd)
+    return alert("اشتراك نشط");
+  if(!confirm("حوّل المبلغ ثم انتظر موافقة الأدمن")) return;
+  current.subEnd=Date.now()+days*86400000;
+  save();
+  startSubTimer();
+}
+function startSubTimer(){
+  subTimer.style.display="block";
+  clearInterval(subInterval);
+  subInterval=setInterval(()=>{
+    let d=current.subEnd-Date.now();
+    if(d<=0){subTimer.textContent="انتهى الاشتراك";return;}
+    let h=Math.floor(d/3600000),
+        m=Math.floor(d%3600000/60000),
+        s=Math.floor(d%60000/1000);
+    subTimer.textContent=`${h}:${m}:${s}`;
+  },1000);
+}
+
+/* withdraw */
+function withdraw(){
+  let amt=+wAmount.value;
+  if(amt<500) return alert("الحد الأدنى 500");
+  if(amt>current.balance) return alert("رصيد غير كاف");
+  let now=Date.now();
+  if(now-current.lastWithdraw<86400000){
+    startWithdrawTimer(current.lastWithdraw+86400000);
+    return alert("مرة يوميًا");
+  }
+  let fee=amt*0.05;
+  current.balance-=amt;
+  current.lastWithdraw=now;
+  save();
+  alert(`ستستلم ${amt-fee}`);
+  startWithdrawTimer(now+86400000);
+}
+function startWithdrawTimer(end){
+  wTimer.style.display="block";
+  clearInterval(withdrawInterval);
+  withdrawInterval=setInterval(()=>{
+    let d=end-Date.now();
+    if(d<=0){wTimer.style.display="none";return;}
+    let h=Math.floor(d/3600000),
+        m=Math.floor(d%3600000/60000),
+        s=Math.floor(d%60000/1000);
+    wTimer.textContent=`${h}:${m}:${s}`;
+  },1000);
+}
+
+/* admin */
+function addBalance(){
+  let u=users.find(x=>x.phone===aPhone.value);
+  if(!u) return alert("غير موجود");
+  u.balance+=+aAmount.value;
+  save();
+  alert("تم");
+}
+
+/* save */
+function save(){
+  users=users.map(u=>u.phone===current.phone?current:u);
+  localStorage.setItem("users",JSON.stringify(users));
+}
+</script>
+
+</body>
+</html>
